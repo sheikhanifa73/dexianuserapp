@@ -21,7 +21,7 @@ The app uses a repository pattern and view model to manage data flow and state c
 
 Installation
 
-Clone the repository: git clone.
+Clone the repository: git clone url https://github.com/sheikhanifa73/dexianuserapp.git
 
 Open the project in Xcode.
 
