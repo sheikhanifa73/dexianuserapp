@@ -127,11 +127,11 @@ class SplashViewController: BaseViewController {
            let window = sceneDelegate.window as? UIWindow {
             window.rootViewController = navController
             window.makeKeyAndVisible()
-            print("✅ Navigation completed: Replaced rootViewController")
+            print("Navigation completed: Replaced rootViewController")
         } else {
             // Fallback if window access fails
             present(navController, animated: true)
-            print("⚠️ Presented navigation controller modally as fallback")
+            print("Presented navigation controller modally as fallback")
         }
     }
 
