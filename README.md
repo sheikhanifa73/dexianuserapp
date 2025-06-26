@@ -13,7 +13,7 @@ The app initializes with a user interface to input or view user details (name, e
 It validates user input (e.g., non-empty name, valid email) before sending requests to the API.
 
 
-API calls (GET, POST, PUT, DELETE) are handled via a NetworkManager to fetch, create, update, or delete users.
+API calls (GET, POST, PUT, DELETE) are handled via a NetworkManager to fetch, create, update, users.
 
 Successful operations update the UI, while failures trigger error messages and refresh the user list.
 
