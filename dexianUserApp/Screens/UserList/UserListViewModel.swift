@@ -1,13 +1,6 @@
 //
 //  UserListViewModel.swift
-//  dexianUser
-//
-//  Created by sheik hanifa on 26/06/25.
-//
-
-//
-//  UserListViewModel.swift
-//  dexianUser
+//  dexianUserApp
 //
 //  Created by sheik hanifa on 26/06/25.
 //
@@ -81,15 +74,12 @@ class UserListViewModel: BaseViewModel {
     
     
     func didSaveUser(_ user: User) {
-        Logger.log("Saving user: \(user.name), ID: \(String(describing: user.id))")
         if let index = users.firstIndex(where: { $0.id == user.id }) {
             // Update existing user
             users[index] = user
-            Logger.log("Updated user at index \(index): \(user.name), ID: \(String(describing: user.id))")
         } else {
             // Add new user
             users.insert(user, at: 0)
-            Logger.log("Added new user: \(user.name), ID: \(String(describing: user.id))")
         }
         DispatchQueue.main.async {
             self.delegate?.didLoadUsers()

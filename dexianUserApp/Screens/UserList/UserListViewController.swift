@@ -1,10 +1,9 @@
 //
 //  UserListViewController.swift
-//  dexianUser
+//  dexianUserApp
 //
 //  Created by sheik hanifa on 26/06/25.
 //
-
 
 import UIKit
 
@@ -70,7 +69,9 @@ class UserListViewController: BaseViewController, CreateUserDelegate {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        // Clear any back button text and ensure proper navigation setup
         navigationController?.setNavigationBarHidden(false, animated: false)
+        setupNavigationBar()
     }
     
     // MARK: - Setup
@@ -130,10 +131,22 @@ class UserListViewController: BaseViewController, CreateUserDelegate {
     }
     
     private func setupNavigationBar() {
+        // Clear any back button title
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
+        navigationItem.leftBarButtonItem = nil
+        
+        // Setup navigation bar appearance
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.largeTitleDisplayMode = .always
         navigationController?.navigationBar.tintColor = AppConstants.Colors.primary
         navigationController?.navigationBar.shadowImage = UIImage()
+        
+        // Ensure the title is properly set
+        navigationItem.title = StringConstants.users
+        
+        // Fix any layout issues by forcing navigation bar to layout
+        navigationController?.navigationBar.setNeedsLayout()
+        navigationController?.navigationBar.layoutIfNeeded()
     }
     
     // MARK: - Actions
@@ -167,7 +180,6 @@ class UserListViewController: BaseViewController, CreateUserDelegate {
     // MARK: - CreateUserDelegate
     
     func didSaveUser(_ user: User) {
-        Logger.log("Saved user: \(user.name), ID: \(String(describing: user.id))")
         viewModel?.didSaveUser(user)
     }
 }
@@ -201,7 +213,6 @@ extension UserListViewController: UITableViewDataSource, UITableViewDelegate {
         tableView.deselectRow(at: indexPath, animated: true)
         guard let user = viewModel?.users[safe: indexPath.row] else { return }
         
-        Logger.log("Selected user: \(user.name), ID: \(String(describing: user.id))")
         guard user.id != nil else {
             showError("Invalid user ID for editing")
             return
@@ -214,7 +225,6 @@ extension UserListViewController: UITableViewDataSource, UITableViewDelegate {
         navController.modalPresentationStyle = .fullScreen
         present(navController, animated: true)
     }
-    
 }
 
 // MARK: - ViewModel Delegate
@@ -240,6 +250,8 @@ extension UserListViewController: UserListViewDelegate {
         DispatchQueue.main.async {
             self.tableView.reloadData()
             self.refreshControl.endRefreshing()
+            // Force navigation bar layout after data reload
+            self.setupNavigationBar()
         }
     }
     

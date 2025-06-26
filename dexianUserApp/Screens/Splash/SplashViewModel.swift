@@ -12,9 +12,7 @@ class SplashViewModel {
     var onCompletion: (() -> Void)?
     
     // MARK: - Methods
-    func initialize() {
-        Logger.log("Splash screen initialized")
-        
+    func initialize() {        
         DispatchQueue.main.asyncAfter(deadline: .now() + AppConstants.Animation.splashDelay) {
             self.onCompletion?()
         }

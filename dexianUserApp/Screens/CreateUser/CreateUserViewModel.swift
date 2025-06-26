@@ -29,7 +29,6 @@ class CreateUserViewModel {
             return
         }
         
-        Logger.log("Creating user: \(user.name)")
         onLoadingStateChanged?(true)
         repository.createUser(user) { [weak self] result in
             guard let self = self else { return }
@@ -37,10 +36,8 @@ class CreateUserViewModel {
             
             switch result {
             case .success(let createdUser):
-                Logger.log("Created user: \(createdUser.name), ID: \(String(describing: createdUser.id))")
                 self.onUserCreated?(createdUser)
             case .failure(let error):
-                Logger.log(" Create user error: \(error.localizedDescription)")
                 self.onError?(error)
             }
         }
@@ -56,31 +53,25 @@ class CreateUserViewModel {
             return
         }
         guard let userId = user.id else {
-            Logger.log("Invalid user ID for update: \(String(describing: user.id))")
             onValidationError?("Invalid user ID for update")
             return
         }
         
-        Logger.log(" Updating user: \(user.name), ID: \(userId)")
         onLoadingStateChanged?(true)
         do {
             let encodedData = try JSONEncoder().encode(user)
-            Logger.log(" Encoded request body: \(String(data: encodedData, encoding: .utf8) ?? "<Binary Data>")")
             repository.updateUser(user) { [weak self] result in
                 guard let self = self else { return }
                 self.onLoadingStateChanged?(false)
                 
                 switch result {
                 case .success(let updatedUser):
-                    Logger.log(" Updated user: \(updatedUser.name), ID: \(String(describing: updatedUser.id))")
                     self.onUserCreated?(updatedUser)
                 case .failure(let error):
-                    Logger.log(" Update user error: \(error.localizedDescription)")
                     self.onError?(error)
                 }
             }
         } catch {
-            Logger.log(" Encoding error: \(error.localizedDescription)")
             onLoadingStateChanged?(false)
             onError?(.decodingError)
         }

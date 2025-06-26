@@ -25,6 +25,11 @@ class CreateUserViewController: BaseViewController {
     private let genderContainer = UIView()
     private let statusContainer = UIView()
     
+    // Card containers for better visual hierarchy
+    private let formCardView = UIView()
+    private let nameFieldContainer = UIView()
+    private let emailFieldContainer = UIView()
+    
     // MARK: - Properties
     private let viewModel: CreateUserViewModel
     weak var delegate: CreateUserDelegate?
@@ -54,72 +59,61 @@ class CreateUserViewController: BaseViewController {
     
     override func setupUI() {
         super.setupUI()
+        view.backgroundColor = UIColor.systemGroupedBackground
         title = user != nil ? StringConstants.editUser : StringConstants.createUser
         
         // Scroll view setup
         scrollView.showsVerticalScrollIndicator = false
         scrollView.keyboardDismissMode = .onDrag
+        scrollView.contentInsetAdjustmentBehavior = .automatic
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         
         // Content view setup
         contentView.translatesAutoresizingMaskIntoConstraints = false
         
+        // Form card setup
+        setupFormCard()
+        
         // Title setup
-//        titleLabel.text = user != nil ? "Edit User" : "Create New User"
-        titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        titleLabel.textColor = AppConstants.Colors.textColor
-        titleLabel.textAlignment = .center
+        titleLabel.font = UIFont.systemFont(ofSize: 28, weight: .bold)
+        titleLabel.textColor = .label
+        titleLabel.textAlignment = .left
+        titleLabel.numberOfLines = 0
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         
+        // Text field containers setup
+        setupTextFieldContainer(nameFieldContainer)
+        setupTextFieldContainer(emailFieldContainer)
+        
         // Text fields setup
-        setupTextField(nameTextField, placeholder: StringConstants.namePlaceholder)
-        setupTextField(emailTextField, placeholder: StringConstants.emailPlaceholder)
+        setupModernTextField(nameTextField, placeholder: "Full Name", icon: "person.fill")
+        setupModernTextField(emailTextField, placeholder: "Email Address", icon: "envelope.fill")
         emailTextField.keyboardType = .emailAddress
         emailTextField.autocapitalizationType = .none
-        emailTextField.translatesAutoresizingMaskIntoConstraints = false
         
         // Segmented controls setup
-        genderSegmentedControl.selectedSegmentIndex = 0
-        genderSegmentedControl.backgroundColor = AppConstants.Colors.secondary
-        genderSegmentedControl.selectedSegmentTintColor = AppConstants.Colors.primary
-        genderSegmentedControl.translatesAutoresizingMaskIntoConstraints = false
+        setupModernSegmentedControl(genderSegmentedControl)
+        setupModernSegmentedControl(statusSegmentedControl)
         
-        statusSegmentedControl.selectedSegmentIndex = 0
-        statusSegmentedControl.backgroundColor = AppConstants.Colors.secondary
-        statusSegmentedControl.selectedSegmentTintColor = AppConstants.Colors.primary
-        statusSegmentedControl.translatesAutoresizingMaskIntoConstraints = false
+        // Container setup
+        setupLabeledContainer(genderContainer, title: "Gender", control: genderSegmentedControl)
+        setupLabeledContainer(statusContainer, title: "Status", control: statusSegmentedControl)
         
         // Buttons setup
-        let buttonTitle = user != nil ? StringConstants.updateUser : StringConstants.createUser
-        setupButton(createButton, title: buttonTitle, backgroundColor: AppConstants.Colors.primary)
+        let buttonTitle = user != nil ? "Update User" : "Create User"
+        setupModernButton(createButton, title: buttonTitle, style: .primary)
         createButton.addTarget(self, action: #selector(createButtonTapped), for: .touchUpInside)
         
-        setupButton(cancelButton, title: StringConstants.cancel, backgroundColor: AppConstants.Colors.secondary)
-        cancelButton.setTitleColor(AppConstants.Colors.textColor, for: .normal)
+        setupModernButton(cancelButton, title: "Cancel", style: .secondary)
         cancelButton.addTarget(self, action: #selector(cancelButtonTapped), for: .touchUpInside)
         
         // Add subviews
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
-        contentView.addSubviews(titleLabel, nameTextField, emailTextField, genderContainer, statusContainer, createButton, cancelButton)
-        
-        // Add segmented controls to containers
-        let genderLabel = UILabel()
-        genderLabel.text = StringConstants.gender
-        genderLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        genderLabel.textColor = AppConstants.Colors.textColor
-        genderLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        let statusLabel = UILabel()
-        statusLabel.text = StringConstants.status
-        statusLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        statusLabel.textColor = AppConstants.Colors.textColor
-        statusLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        genderContainer.addSubviews(genderLabel, genderSegmentedControl)
-        statusContainer.addSubviews(statusLabel, statusSegmentedControl)
-        genderContainer.translatesAutoresizingMaskIntoConstraints = false
-        statusContainer.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubviews(titleLabel, formCardView)
+        formCardView.addSubviews(nameFieldContainer, emailFieldContainer, genderContainer, statusContainer, createButton, cancelButton)
+        nameFieldContainer.addSubview(nameTextField)
+        emailFieldContainer.addSubview(emailTextField)
     }
     
     override func setupConstraints() {
@@ -138,90 +132,190 @@ class CreateUserViewController: BaseViewController {
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             
             // Title
-            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 32),
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 32),
-            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -32),
+            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             
-            // Name field
-            nameTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 32),
-            nameTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 32),
-            nameTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -32),
-            nameTextField.heightAnchor.constraint(equalToConstant: AppConstants.Dimensions.buttonHeight),
+            // Form card
+            formCardView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 24),
+            formCardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            formCardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            formCardView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20),
             
-            // Email field
-            emailTextField.topAnchor.constraint(equalTo: nameTextField.bottomAnchor, constant: 16),
-            emailTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 32),
-            emailTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -32),
-            emailTextField.heightAnchor.constraint(equalToConstant: AppConstants.Dimensions.buttonHeight),
+            // Name field container
+            nameFieldContainer.topAnchor.constraint(equalTo: formCardView.topAnchor, constant: 24),
+            nameFieldContainer.leadingAnchor.constraint(equalTo: formCardView.leadingAnchor, constant: 20),
+            nameFieldContainer.trailingAnchor.constraint(equalTo: formCardView.trailingAnchor, constant: -20),
+            nameFieldContainer.heightAnchor.constraint(equalToConstant: 56),
+            
+            // Name text field
+            nameTextField.leadingAnchor.constraint(equalTo: nameFieldContainer.leadingAnchor, constant: 16),
+            nameTextField.trailingAnchor.constraint(equalTo: nameFieldContainer.trailingAnchor, constant: -16),
+            nameTextField.centerYAnchor.constraint(equalTo: nameFieldContainer.centerYAnchor),
+            nameTextField.heightAnchor.constraint(equalToConstant: 24),
+            
+            // Email field container
+            emailFieldContainer.topAnchor.constraint(equalTo: nameFieldContainer.bottomAnchor, constant: 16),
+            emailFieldContainer.leadingAnchor.constraint(equalTo: formCardView.leadingAnchor, constant: 20),
+            emailFieldContainer.trailingAnchor.constraint(equalTo: formCardView.trailingAnchor, constant: -20),
+            emailFieldContainer.heightAnchor.constraint(equalToConstant: 56),
+            
+            // Email text field
+            emailTextField.leadingAnchor.constraint(equalTo: emailFieldContainer.leadingAnchor, constant: 16),
+            emailTextField.trailingAnchor.constraint(equalTo: emailFieldContainer.trailingAnchor, constant: -16),
+            emailTextField.centerYAnchor.constraint(equalTo: emailFieldContainer.centerYAnchor),
+            emailTextField.heightAnchor.constraint(equalToConstant: 24),
             
             // Gender container
-            genderContainer.topAnchor.constraint(equalTo: emailTextField.bottomAnchor, constant: 24),
-            genderContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 32),
-            genderContainer.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -32),
-            
-            // Gender label
-            genderContainer.subviews[0].topAnchor.constraint(equalTo: genderContainer.topAnchor),
-            genderContainer.subviews[0].leadingAnchor.constraint(equalTo: genderContainer.leadingAnchor),
-            genderContainer.subviews[0].trailingAnchor.constraint(equalTo: genderContainer.trailingAnchor),
-            
-            // Gender segmented control
-            genderSegmentedControl.topAnchor.constraint(equalTo: genderContainer.subviews[0].bottomAnchor, constant: 8),
-            genderSegmentedControl.leadingAnchor.constraint(equalTo: genderContainer.leadingAnchor),
-            genderSegmentedControl.trailingAnchor.constraint(equalTo: genderContainer.trailingAnchor),
-            genderSegmentedControl.bottomAnchor.constraint(equalTo: genderContainer.bottomAnchor),
-            genderSegmentedControl.heightAnchor.constraint(equalToConstant: 32),
+            genderContainer.topAnchor.constraint(equalTo: emailFieldContainer.bottomAnchor, constant: 32),
+            genderContainer.leadingAnchor.constraint(equalTo: formCardView.leadingAnchor, constant: 20),
+            genderContainer.trailingAnchor.constraint(equalTo: formCardView.trailingAnchor, constant: -20),
             
             // Status container
             statusContainer.topAnchor.constraint(equalTo: genderContainer.bottomAnchor, constant: 24),
-            statusContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 32),
-            statusContainer.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -32),
-            
-            // Status label
-            statusContainer.subviews[0].topAnchor.constraint(equalTo: statusContainer.topAnchor),
-            statusContainer.subviews[0].leadingAnchor.constraint(equalTo: statusContainer.leadingAnchor),
-            statusContainer.subviews[0].trailingAnchor.constraint(equalTo: statusContainer.trailingAnchor),
-            
-            // Status segmented control
-            statusSegmentedControl.topAnchor.constraint(equalTo: statusContainer.subviews[0].bottomAnchor, constant: 8),
-            statusSegmentedControl.leadingAnchor.constraint(equalTo: statusContainer.leadingAnchor),
-            statusSegmentedControl.trailingAnchor.constraint(equalTo: statusContainer.trailingAnchor),
-            statusSegmentedControl.bottomAnchor.constraint(equalTo: statusContainer.bottomAnchor),
-            statusSegmentedControl.heightAnchor.constraint(equalToConstant: 32),
+            statusContainer.leadingAnchor.constraint(equalTo: formCardView.leadingAnchor, constant: 20),
+            statusContainer.trailingAnchor.constraint(equalTo: formCardView.trailingAnchor, constant: -20),
             
             // Create button
-            createButton.topAnchor.constraint(equalTo: statusContainer.bottomAnchor, constant: 24),
-            createButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 32),
-            createButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -32),
-            createButton.heightAnchor.constraint(equalToConstant: AppConstants.Dimensions.buttonHeight),
+            createButton.topAnchor.constraint(equalTo: statusContainer.bottomAnchor, constant: 32),
+            createButton.leadingAnchor.constraint(equalTo: formCardView.leadingAnchor, constant: 20),
+            createButton.trailingAnchor.constraint(equalTo: formCardView.trailingAnchor, constant: -20),
+            createButton.heightAnchor.constraint(equalToConstant: 54),
             
             // Cancel button
-            cancelButton.topAnchor.constraint(equalTo: createButton.bottomAnchor, constant: 16),
-            cancelButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 32),
-            cancelButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -32),
-            cancelButton.heightAnchor.constraint(equalToConstant: AppConstants.Dimensions.buttonHeight),
-            cancelButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -32)
+            cancelButton.topAnchor.constraint(equalTo: createButton.bottomAnchor, constant: 12),
+            cancelButton.leadingAnchor.constraint(equalTo: formCardView.leadingAnchor, constant: 20),
+            cancelButton.trailingAnchor.constraint(equalTo: formCardView.trailingAnchor, constant: -20),
+            cancelButton.heightAnchor.constraint(equalToConstant: 54),
+            cancelButton.bottomAnchor.constraint(equalTo: formCardView.bottomAnchor, constant: -24)
         ])
     }
     
-    // MARK: - Private Methods
-    private func setupTextField(_ textField: UITextField, placeholder: String) {
+    // MARK: - Modern UI Setup Methods
+    private func setupFormCard() {
+        formCardView.backgroundColor = .systemBackground
+        formCardView.layer.cornerRadius = 16
+        formCardView.layer.shadowColor = UIColor.black.cgColor
+        formCardView.layer.shadowOffset = CGSize(width: 0, height: 2)
+        formCardView.layer.shadowRadius = 8
+        formCardView.layer.shadowOpacity = 0.1
+        formCardView.translatesAutoresizingMaskIntoConstraints = false
+    }
+    
+    private func setupTextFieldContainer(_ container: UIView) {
+        container.backgroundColor = UIColor.systemGray6
+        container.layer.cornerRadius = 12
+        container.layer.borderWidth = 1
+        container.layer.borderColor = UIColor.systemGray4.cgColor
+        container.translatesAutoresizingMaskIntoConstraints = false
+    }
+    
+    private func setupModernTextField(_ textField: UITextField, placeholder: String, icon: String) {
         textField.placeholder = placeholder
-        textField.borderStyle = .roundedRect
-        textField.backgroundColor = AppConstants.Colors.background
-        textField.font = UIFont.systemFont(ofSize: 16)
+        textField.borderStyle = .none
+        textField.backgroundColor = .clear
+        textField.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        textField.textColor = .label
         textField.delegate = self
         textField.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Add icon
+        let iconView = UIImageView(image: UIImage(systemName: icon))
+        iconView.tintColor = .systemGray2
+        iconView.contentMode = .scaleAspectFit
+        iconView.frame = CGRect(x: 0, y: 0, width: 20, height: 20)
+        
+        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 30, height: 20))
+        paddingView.addSubview(iconView)
+        iconView.center = paddingView.center
+        
+        textField.leftView = paddingView
+        textField.leftViewMode = .always
     }
     
-    private func setupButton(_ button: UIButton, title: String, backgroundColor: UIColor) {
+    private func setupModernSegmentedControl(_ segmentedControl: UISegmentedControl) {
+        segmentedControl.selectedSegmentIndex = 0
+        segmentedControl.backgroundColor = UIColor.systemGray6
+        segmentedControl.selectedSegmentTintColor = AppConstants.Colors.primary
+        segmentedControl.setTitleTextAttributes([
+            .foregroundColor: UIColor.label,
+            .font: UIFont.systemFont(ofSize: 15, weight: .medium)
+        ], for: .normal)
+        segmentedControl.setTitleTextAttributes([
+            .foregroundColor: UIColor.white,
+            .font: UIFont.systemFont(ofSize: 15, weight: .semibold)
+        ], for: .selected)
+        segmentedControl.layer.cornerRadius = 8
+        segmentedControl.translatesAutoresizingMaskIntoConstraints = false
+    }
+    
+    private func setupLabeledContainer(_ container: UIView, title: String, control: UISegmentedControl) {
+        container.translatesAutoresizingMaskIntoConstraints = false
+        
+        let label = UILabel()
+        label.text = title
+        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        label.textColor = .label
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        container.addSubviews(label, control)
+        
+        NSLayoutConstraint.activate([
+            label.topAnchor.constraint(equalTo: container.topAnchor),
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            label.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            
+            control.topAnchor.constraint(equalTo: label.bottomAnchor, constant: 8),
+            control.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            control.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            control.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            control.heightAnchor.constraint(equalToConstant: 36)
+        ])
+    }
+    
+    enum ButtonStyle {
+        case primary, secondary
+    }
+    
+    private func setupModernButton(_ button: UIButton, title: String, style: ButtonStyle) {
         button.setTitle(title, for: .normal)
-        button.backgroundColor = backgroundColor
-        button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        button.makeRounded()
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        button.layer.cornerRadius = 12
         button.translatesAutoresizingMaskIntoConstraints = false
+        
+        switch style {
+        case .primary:
+            button.backgroundColor = AppConstants.Colors.primary
+            button.setTitleColor(.white, for: .normal)
+            button.layer.shadowColor = AppConstants.Colors.primary.cgColor
+            button.layer.shadowOffset = CGSize(width: 0, height: 4)
+            button.layer.shadowRadius = 8
+            button.layer.shadowOpacity = 0.3
+        case .secondary:
+            button.backgroundColor = UIColor.systemGray5
+            button.setTitleColor(.label, for: .normal)
+            button.layer.borderWidth = 1
+            button.layer.borderColor = UIColor.systemGray4.cgColor
+        }
+        
+        // Add press animation
+        button.addTarget(self, action: #selector(buttonTouchDown), for: .touchDown)
+        button.addTarget(self, action: #selector(buttonTouchUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
     }
     
+    @objc private func buttonTouchDown(_ sender: UIButton) {
+        UIView.animate(withDuration: 0.1) {
+            sender.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+        }
+    }
+    
+    @objc private func buttonTouchUp(_ sender: UIButton) {
+        UIView.animate(withDuration: 0.1) {
+            sender.transform = CGAffineTransform.identity
+        }
+    }
+    
+    // MARK: - Private Methods
     private func configureForEditMode() {
         guard let user = user else { return }
         nameTextField.text = user.name
@@ -253,7 +347,6 @@ class CreateUserViewController: BaseViewController {
             alert.addAction(okAction)
             
             self?.present(alert, animated: true)
-            Logger.log("User \(actionType) successfully: \(user.name), ID: \(String(describing: user.id))")
         }
         
         viewModel.onError = { [weak self] error in
@@ -271,10 +364,22 @@ class CreateUserViewController: BaseViewController {
             }
         }
     }
-
+    
     // MARK: - Navigation
     private func navigateToUserList() {
         if let navController = navigationController {
+            // If this VC was presented modally, dismiss it first
+            if presentingViewController != nil {
+                dismiss(animated: true) {
+                    // After dismissing, ensure we're back to the UserListViewController
+                    if let tabBarController = self.presentingViewController as? UITabBarController,
+                       let selectedNavController = tabBarController.selectedViewController as? UINavigationController {
+                        selectedNavController.popToRootViewController(animated: false)
+                    }
+                }
+                return
+            }
+            
             // Try to find UserListViewController in the navigation stack
             for viewController in navController.viewControllers {
                 if viewController is UserListViewController {
@@ -283,11 +388,9 @@ class CreateUserViewController: BaseViewController {
                 }
             }
             
-            // If not found in stack, create new instance and push
-            let userListVC = UserListViewController()
-            navController.pushViewController(userListVC, animated: true)
+            // If not found in stack, pop to root (assuming UserListViewController is root)
+            navController.popToRootViewController(animated: true)
         }
-        
     }
     private func setupKeyboardObservers() {
         NotificationCenter.default.addObserver(
@@ -313,8 +416,6 @@ class CreateUserViewController: BaseViewController {
         let status = User.Status.allCases[statusSegmentedControl.selectedSegmentIndex]
         
         let userData = User(id: user?.id, name: name, email: email, gender: gender, status: status)
-        Logger.log("Attempting to \(user != nil ? "update" : "create") user: \(userData.name), ID: \(String(describing: userData.id))")
-        
         if user != nil {
             viewModel.updateUser(userData)
         } else {
@@ -334,7 +435,8 @@ class CreateUserViewController: BaseViewController {
         
         // Scroll to active text field if needed
         if nameTextField.isFirstResponder || emailTextField.isFirstResponder {
-            scrollView.scrollRectToVisible((nameTextField.isFirstResponder ? nameTextField : emailTextField).frame, animated: true)
+            let activeField = nameTextField.isFirstResponder ? nameFieldContainer : emailFieldContainer
+            scrollView.scrollRectToVisible(activeField.frame, animated: true)
         }
     }
     
@@ -353,5 +455,21 @@ extension CreateUserViewController: UITextFieldDelegate {
             textField.resignFirstResponder()
         }
         return true
+    }
+    
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        let container = textField == nameTextField ? nameFieldContainer : emailFieldContainer
+        UIView.animate(withDuration: 0.2) {
+            container.layer.borderColor = AppConstants.Colors.primary.cgColor
+            container.layer.borderWidth = 2
+        }
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        let container = textField == nameTextField ? nameFieldContainer : emailFieldContainer
+        UIView.animate(withDuration: 0.2) {
+            container.layer.borderColor = UIColor.systemGray4.cgColor
+            container.layer.borderWidth = 1
+        }
     }
 }

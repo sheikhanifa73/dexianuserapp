@@ -31,13 +31,10 @@ class SplashViewController: BaseViewController {
         super.viewDidAppear(animated)
         
         // Debug: Check navigation controller
-        print("Navigation Controller: \(String(describing: navigationController))")
-        print("Navigation Controller view controllers: \(navigationController?.viewControllers.count ?? 0)")
         
         // Fallback navigation - but only if haven't navigated yet
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
             if !(self?.hasNavigated ?? true) {
-                print("Fallback navigation triggered")
                 self?.navigateToUserList()
             }
         }
@@ -97,7 +94,6 @@ class SplashViewController: BaseViewController {
     // MARK: - ViewModel Binding
     private func bindViewModel() {
         viewModel.onCompletion = { [weak self] in
-            print("ViewModel completion called")
             DispatchQueue.main.async {
                 self?.navigateToUserList()
             }
@@ -107,13 +103,10 @@ class SplashViewController: BaseViewController {
     // MARK: - Navigation
     private func navigateToUserList() {
         guard !hasNavigated else {
-            print("Navigation already attempted, skipping...")
             return
         }
         
         hasNavigated = true
-        print("Starting navigation to UserListViewController")
-        
         let userListVC = UserListViewController()
         let navController = UINavigationController(rootViewController: userListVC)
         navController.modalPresentationStyle = .fullScreen
@@ -127,11 +120,9 @@ class SplashViewController: BaseViewController {
            let window = sceneDelegate.window as? UIWindow {
             window.rootViewController = navController
             window.makeKeyAndVisible()
-            print("Navigation completed: Replaced rootViewController")
         } else {
             // Fallback if window access fails
             present(navController, animated: true)
-            print("Presented navigation controller modally as fallback")
         }
     }
 

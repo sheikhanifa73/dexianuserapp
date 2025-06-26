@@ -29,15 +29,12 @@ class NetworkManager: NetworkServiceProtocol {
         completion: @escaping (Result<T, NetworkError>) -> Void
     ) {
         let fullURL = baseURL + endpoint
-        Logger.log("📡 Full URL: \(fullURL)")
         guard let url = URL(string: fullURL) else {
-            Logger.log(" Invalid URL: \(fullURL)")
             completion(.failure(.invalidURL))
             return
         }
         
         guard checkNetworkReachability() else {
-            Logger.log(" Network unavailable")
             completion(.failure(.networkUnavailable))
             return
         }
@@ -50,45 +47,34 @@ class NetworkManager: NetworkServiceProtocol {
         
         if let body = body, let bodyString = String(data: body, encoding: .utf8) {
             request.httpBody = body
-            Logger.log(" Request Body: \(bodyString)")
         } else if let body = body {
             request.httpBody = body
-            Logger.log(" Request Body: <Binary Data, \(body.count) bytes>")
         }
-        
-        Logger.log(" Request Headers: \(request.allHTTPHeaderFields ?? [:])")
-        
+                
         let task = session.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    Logger.log(" Network Error: \(error.localizedDescription)")
                     completion(.failure(.networkUnavailable))
                     return
                 }
                 
                 guard let httpResponse = response as? HTTPURLResponse else {
-                    Logger.log(" Invalid response")
                     completion(.failure(.unknown("Invalid response")))
                     return
                 }
                 
-                Logger.log("Response Status: \(httpResponse.statusCode)")
                 if let data = data, let responseString = String(data: data, encoding: .utf8), !responseString.isEmpty {
-                    Logger.log("Response Data: \(responseString)")
                 } else {
-                    Logger.log(" Response Data: <Empty>")
                 }
                 
                 switch httpResponse.statusCode {
                 case 200...299:
                     guard responseType != Void.self else {
-                        Logger.log(" Success: No content expected for response type Void")
                         completion(.success(() as! T))
                         return
                     }
                     
                     guard let data = data else {
-                        Logger.log(" No data received for \(method.rawValue) request")
                         completion(.failure(.noData))
                         return
                     }
@@ -97,10 +83,8 @@ class NetworkManager: NetworkServiceProtocol {
                         let decoder = JSONDecoder()
                         decoder.keyDecodingStrategy = .convertFromSnakeCase // Adjust if API uses snake_case
                         let decodedResponse = try decoder.decode(responseType, from: data)
-                        Logger.log("Decoded Response: \(String(describing: decodedResponse))")
                         completion(.success(decodedResponse))
                     } catch {
-                        Logger.log(" Decoding Error: \(error)")
                         completion(.failure(.decodingError))
                     }
                     
@@ -108,48 +92,37 @@ class NetworkManager: NetworkServiceProtocol {
                     // Handle 204 No Content, skip decoding for EmptyResponse or Void with empty data
                     if responseType == Void.self || (NSStringFromClass(responseType as! AnyClass) == "EmptyResponse") {
                         if data == nil || (data?.isEmpty ?? true) {
-                            Logger.log("Success: No content returned (204) for \(method.rawValue) request")
                             completion(.success(() as! T))
                         } else {
                             do {
                                 let decoder = JSONDecoder()
                                 let decodedResponse = try decoder.decode(responseType, from: data!)
-                                Logger.log(" Decoded Response: \(String(describing: decodedResponse))")
                                 completion(.success(decodedResponse))
                             } catch {
-                                Logger.log(" Decoding Error: \(error)")
                                 completion(.failure(.decodingError))
                             }
                         }
                     } else {
-                        Logger.log(" Error: Expected data for response type \(responseType), but received 204 No Content")
                         completion(.failure(.noData))
                     }
                     
                 case 401:
-                    Logger.log(" Unauthorized: Check if API token is valid")
                     completion(.failure(.unauthorized))
                     
                 case 429:
-                    Logger.log(" Rate limit exceeded")
                     completion(.failure(.rateLimitExceeded))
                     
                 case 400...499:
-                    Logger.log(" Client Error: Status Code \(httpResponse.statusCode)")
                     if let data = data, let errorMessage = String(data: data, encoding: .utf8), !errorMessage.isEmpty {
-                        Logger.log(" Client Error Details: \(errorMessage)")
                     }
                     completion(.failure(.serverError(statusCode: httpResponse.statusCode)))
                     
                 case 500...599:
-                    Logger.log(" Server Error: Status Code \(httpResponse.statusCode)")
                     if let data = data, let errorMessage = String(data: data, encoding: .utf8), !errorMessage.isEmpty {
-                        Logger.log(" Server Error Details: \(errorMessage)")
                     }
                     completion(.failure(.serverError(statusCode: httpResponse.statusCode)))
                     
                 default:
-                    Logger.log(" Unexpected status code: \(httpResponse.statusCode)")
                     completion(.failure(.unknown("Unexpected status code: \(httpResponse.statusCode)")))
                 }
             }

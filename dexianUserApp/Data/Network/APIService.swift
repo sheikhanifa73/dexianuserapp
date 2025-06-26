@@ -24,7 +24,6 @@ class APIService: APIServiceProtocol {
         }
         
         if let bodyString = String(data: userData, encoding: .utf8) {
-            Logger.log("Create User Request Body: \(bodyString)")
         }
         
         networkManager.request(
@@ -54,7 +53,6 @@ class APIService: APIServiceProtocol {
         }
         
         if let bodyString = String(data: userData, encoding: .utf8) {
-            Logger.log("Update User Request Body: \(bodyString)")
         }
         
         let endpoint = APIEndpoints.Users.update(id: id) // Supports PUT or PATCH
@@ -83,15 +81,12 @@ class APIService: APIServiceProtocol {
             case .success:
                 completion(.success(()))
             case .failure(let error):
-                Logger.log(" Delete failed for user ID \(id): \(error.localizedDescription)")
                 // Refresh user list on failure
                 self.fetchUsers(page: 1) { userResult in
                     switch userResult {
                     case .success(let users):
-                        Logger.log(" Refreshed user list after delete failure: \(users.count) users")
                         completion(.failure(error)) // Propagate the original error
                     case .failure(let fetchError):
-                        Logger.log(" Failed to refresh user list: \(fetchError.localizedDescription)")
                         completion(.failure(error)) // Propagate the original error
                     }
                 }
